@@ -10,6 +10,7 @@ import EmployeeProfile from './pages/EmployeeProfile';
 import Attendance from './pages/Attendance';
 import TimeOff from './pages/TimeOff';
 import LeaveAllocation from './pages/LeaveAllocation';
+import ReportsView from './pages/ReportsView';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
           {/* ── Shared routes (role-filtered data inside) ─────────── */}
           <Route path="/attendance"   element={<RequireAuth><Attendance /></RequireAuth>} />
           <Route path="/timeoff"      element={<RequireAuth><TimeOff /></RequireAuth>} />
+          <Route path="/reports"      element={<RequireAuth><ReportsView /></RequireAuth>} />
 
           {/* ── Admin / HR only routes ────────────────────────────── */}
           <Route path="/employees"    element={<RequireAuth><RequireAdminOrHr><EmployeeDirectory /></RequireAdminOrHr></RequireAuth>} />

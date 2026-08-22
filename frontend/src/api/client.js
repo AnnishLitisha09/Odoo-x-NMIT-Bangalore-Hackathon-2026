@@ -130,3 +130,13 @@ export const apiMarkAllNotificationsAsRead = (token) =>
 
 export const apiDeleteNotification = (id, token) =>
   request('DELETE', `/notifications/${id}`, null, token);
+
+// Reports & Analytics
+export const apiGetAnalyticsSummary = (token) =>
+  request('GET', '/reports/analytics', null, token);
+
+export const apiGetSalarySlip = (employeeId, month, year, token) =>
+  request('GET', `/reports/salary-slip/${employeeId}?month=${month}&year=${year}`, null, token);
+
+export const apiGetAttendanceReport = (month, year, token) =>
+  request('GET', `/reports/attendance?month=${month}&year=${year}`, null, token);
