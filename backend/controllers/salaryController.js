@@ -101,17 +101,29 @@ async function updateSalaryInfo(req, res) {
         });
       }
 
-      const totalWithoutFixed = parseFloat((basicAmount + otherSum).toFixed(2));
+      let totalWithoutFixed = parseFloat((basicAmount + otherSum).toFixed(2));
 
       if (totalWithoutFixed > updatedWage) {
-        await transaction.rollback();
-        return res.status(400).json({
-          message: `Validation Error: Sum of defined components (${totalWithoutFixed.toFixed(2)}) exceeds monthly wage (${updatedWage.toFixed(2)}).`
-        });
+        // Auto-adjust standard_allowance or non-basic components to fit monthly wage
+        const excess = totalWithoutFixed - updatedWage;
+        const stdCompIndex = computedComponents.findIndex(c => c.name === 'standard_allowance');
+        if (stdCompIndex !== -1 && computedComponents[stdCompIndex].computedAmount >= excess) {
+          computedComponents[stdCompIndex].computedAmount = parseFloat((computedComponents[stdCompIndex].computedAmount - excess).toFixed(2));
+          computedComponents[stdCompIndex].value = computedComponents[stdCompIndex].computedAmount;
+        } else {
+          // Proportionally cap components to fit updatedWage
+          const ratio = updatedWage / totalWithoutFixed;
+          computedComponents.forEach(c => {
+            if (c.name !== 'basic') {
+              c.computedAmount = parseFloat((c.computedAmount * ratio).toFixed(2));
+            }
+          });
+        }
+        totalWithoutFixed = updatedWage;
       }
 
       // Compute fixed allowance as residual
-      const fixedAmount = parseFloat((updatedWage - totalWithoutFixed).toFixed(2));
+      const fixedAmount = parseFloat(Math.max(0, updatedWage - totalWithoutFixed).toFixed(2));
       computedComponents.push({
         name: 'fixed_allowance',
         computationType: 'fixed_amount',

@@ -80,7 +80,7 @@ async function getAnalyticsSummary(req, res) {
 async function generateSalarySlip(req, res) {
   try {
     const { employeeId } = req.params;
-    const { month, year } = req.query; // e.g. month=8, year=2026
+    const { month, year } = req.query;
 
     const targetEmpId = parseInt(employeeId) || req.user.employeeId;
 

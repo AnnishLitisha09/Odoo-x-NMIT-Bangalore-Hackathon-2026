@@ -267,7 +267,7 @@ function SalaryInfoTab({ empId, token }) {
       if (compMap[name] !== undefined) return parseFloat(compMap[name].value);
       if (name === 'basic') return 50;
       if (name === 'hra') return 50;
-      if (name === 'standard_allowance') return 4167;
+      if (name === 'standard_allowance') return 10;
       if (name === 'bonus') return 8.33;
       if (name === 'lta') return 8.33;
       return 0;
@@ -275,8 +275,8 @@ function SalaryInfoTab({ empId, token }) {
     
     const getDefType = (name) => {
       if (compMap[name] !== undefined) return compMap[name].computationType;
-      if (name === 'standard_allowance' || name === 'fixed_allowance') return 'fixed_amount';
-      return 'percentage_of_basic'; // standard represents % basic (except basic which is % of wage)
+      if (name === 'fixed_allowance') return 'fixed_amount';
+      return 'percentage_of_basic';
     };
 
     setForm({
