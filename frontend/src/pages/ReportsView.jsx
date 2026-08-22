@@ -156,24 +156,24 @@ export default function ReportsView() {
         </div>
 
         {/* Tab Navigation Bar */}
-        <div className="card" style={{ padding: '0.4rem', marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', maxWidth: 500 }}>
+        <div className="card" style={{ padding: '0.4rem', marginBottom: '1.5rem', display: 'inline-flex', gap: '0.4rem', flexWrap: 'nowrap', overflowX: 'auto', maxWidth: '100%', scrollbarWidth: 'none' }}>
           <button
             className={`btn-secondary ${activeTab === 'analytics' ? 'active-tab' : ''}`}
             onClick={() => setActiveTab('analytics')}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.5rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'analytics' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'analytics' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
-            <BarChart3 size={15} /> Analytics Overview
+            style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'analytics' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'analytics' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
+            <BarChart3 size={16} /> Analytics Overview
           </button>
           <button
             className={`btn-secondary ${activeTab === 'salary' ? 'active-tab' : ''}`}
             onClick={() => setActiveTab('salary')}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.5rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'salary' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'salary' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
-            <FileText size={15} /> Salary Slips
+            style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'salary' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'salary' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
+            <FileText size={16} /> Salary Slips
           </button>
           <button
             className={`btn-secondary ${activeTab === 'attendance' ? 'active-tab' : ''}`}
             onClick={() => setActiveTab('attendance')}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', padding: '0.5rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'attendance' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'attendance' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
-            <CalendarDays size={15} /> Attendance Report
+            style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'attendance' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'attendance' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
+            <CalendarDays size={16} /> Attendance Report
           </button>
         </div>
 
