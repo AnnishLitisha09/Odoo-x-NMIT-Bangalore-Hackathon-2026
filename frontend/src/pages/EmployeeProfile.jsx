@@ -4,7 +4,7 @@ import { ArrowLeft, Edit2, Save, X, Camera, Plus, Trash2, Eye, EyeOff, AlertCirc
 import { useAuth } from '../contexts/AuthContext';
 import {
   apiGetEmployee, apiUpdateEmployee, apiGetSalary, apiUpdateSalary,
-  apiAddSkill, apiRemoveSkill, apiAddCertification, apiRemoveCertification, apiChangePassword
+  apiAddSkill, apiRemoveSkill, apiAddCertification, apiRemoveCertification, apiChangePassword, apiDeleteEmployee
 } from '../api/client';
 import Header from '../components/Header';
 
@@ -635,6 +635,21 @@ export default function EmployeeProfile() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('resume');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  async function confirmSoftDelete() {
+    setDeleting(true);
+    try {
+      await apiDeleteEmployee(id, token);
+      setShowDeleteModal(false);
+      navigate('/employees');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const canEdit = isAdmin || isSelf;
 
@@ -724,6 +739,11 @@ export default function EmployeeProfile() {
         <span style={{ color: 'var(--color-border)' }}>|</span>
         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{emp.firstName} {emp.lastName}{isSelf ? ' (You)' : ''}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+          {isAdmin && !isSelf && !editing && (
+            <button className="btn-danger" onClick={() => setShowDeleteModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.36rem', fontSize: '0.85rem' }}>
+              <Trash2 size={14} /> Archive Employee
+            </button>
+          )}
           {canEdit && !editing && <button id="edit-profile-btn" className="btn-secondary" onClick={() => setEditing(true)}><Edit2 size={14} /> Edit</button>}
           {editing && <>
             <button className="btn-secondary" onClick={() => { setEditing(false); setEmpForm(emp); }}>Cancel</button>
@@ -731,6 +751,27 @@ export default function EmployeeProfile() {
           </>}
         </div>
       </div>
+
+      {/* Delete / Soft Delete Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowDeleteModal(false)}>
+          <div className="modal-box" style={{ maxWidth: 440, textAlign: 'center' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <AlertCircle size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.5rem' }}>Archive Employee</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Are you sure you want to soft-delete / archive <strong>{emp.firstName} {emp.lastName}</strong>? Their profile will be hidden from directory listings.
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancel</button>
+              <button className="btn-danger" onClick={confirmSoftDelete} disabled={deleting}>
+                {deleting ? 'Archiving…' : 'Yes, Archive Employee'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
         {/* Profile Header */}

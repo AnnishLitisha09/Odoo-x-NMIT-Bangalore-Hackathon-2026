@@ -149,11 +149,16 @@ async function createEmployee(req, res) {
 
 async function getEmployees(req, res) {
   try {
-    const { search } = req.query;
+    const { search, showArchived } = req.query;
     let whereClause = {};
+
+    if (showArchived !== 'true') {
+      whereClause.isActive = true;
+    }
 
     if (search) {
       whereClause = {
+        ...whereClause,
         [Op.or]: [
           { firstName: { [Op.like]: `%${search}%` } },
           { lastName: { [Op.like]: `%${search}%` } },
@@ -427,6 +432,45 @@ async function removeCertification(req, res) {
   }
 }
 
+async function deleteEmployee(req, res) {
+  try {
+    const { id } = req.params;
+    const isAdminOrHr = ['admin', 'hr'].includes(req.user.role);
+
+    if (!isAdminOrHr) {
+      return res.status(403).json({ message: 'Access denied: Only Admin or HR can delete employees.' });
+    }
+
+    const employee = await Employee.findByPk(id);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found.' });
+    }
+
+    if (employee.id === req.user.employeeId) {
+      return res.status(400).json({ message: 'You cannot delete your own profile.' });
+    }
+
+    // Soft delete: set isActive to false
+    employee.isActive = false;
+    await employee.save();
+
+    // Deactivate user login
+    const user = await User.findOne({ where: { employeeId: id } });
+    if (user) {
+      user.mustResetPassword = true;
+      await user.save();
+    }
+
+    return res.status(200).json({
+      message: 'Employee soft-deleted (archived) successfully.',
+      employeeId: parseInt(id),
+    });
+  } catch (error) {
+    console.error('Error soft-deleting employee:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
 module.exports = {
   createEmployee,
   getEmployees,
@@ -436,4 +480,5 @@ module.exports = {
   removeSkill,
   addCertification,
   removeCertification,
+  deleteEmployee,
 };

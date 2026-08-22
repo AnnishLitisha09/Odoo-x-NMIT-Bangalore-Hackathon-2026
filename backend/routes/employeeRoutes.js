@@ -16,6 +16,9 @@ router.get('/:id', employeeController.getEmployeeById);
 // Update route handles its own authorization rules
 router.patch('/:id', employeeController.updateEmployee);
 
+// Soft Delete (Archive) Employee
+router.delete('/:id', requireRole(['admin', 'hr']), employeeController.deleteEmployee);
+
 // Skill sub-routes
 router.post('/:employeeId/skills', employeeController.addSkill);
 router.delete('/:employeeId/skills/:id', employeeController.removeSkill);

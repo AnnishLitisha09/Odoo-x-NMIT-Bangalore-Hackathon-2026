@@ -45,6 +45,9 @@ export const apiCreateEmployee = (body, token) =>
 export const apiUpdateEmployee = (id, body, token) =>
   request('PATCH', `/employees/${id}`, body, token);
 
+export const apiDeleteEmployee = (id, token) =>
+  request('DELETE', `/employees/${id}`, null, token);
+
 export const apiAddSkill = (empId, body, token) =>
   request('POST', `/employees/${empId}/skills`, body, token);
 

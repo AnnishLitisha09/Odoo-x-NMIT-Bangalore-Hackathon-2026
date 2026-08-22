@@ -119,6 +119,11 @@ const Employee = sequelize.define('Employee', {
     allowNull: true,
     defaultValue: 1,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
 }, {
   tableName: 'employees',
 });
