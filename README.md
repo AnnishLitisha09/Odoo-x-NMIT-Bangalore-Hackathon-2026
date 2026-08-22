@@ -1,4 +1,4 @@
-# Odoo x Adamas University Hackathon '26 — HRMS Portal
+# Odoo x NMIT Bangalore Hackathon 2026 — Dayflow HRMS Portal
 
 A premium, full-stack Human Resource Management System (HRMS) built with React (Vite) and Node.js (Express + Sequelize ORM + MySQL).
 
@@ -25,15 +25,26 @@ A premium, full-stack Human Resource Management System (HRMS) built with React (
    Create a `.env` file inside the `backend` directory:
    ```env
    PORT=5000
-   DB_HOST=localhost
+   DB_HOST=127.0.0.1
    DB_PORT=3306
    DB_USER=root
    DB_PASS=your_mysql_password
    DB_NAME=hrms_db
-   JWT_SECRET=your_jwt_secret_key_here
+   JWT_SECRET=hrms_jwt_secret_key_2026
    FRONTEND_URL=http://localhost:5173
+   NODE_ENV=development
+
+   # ✉️ SMTP Email Configuration (Optional - for sending real emails via Gmail / SMTP)
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_USER=your_email@gmail.com
+   SMTP_PASS=your_16_char_google_app_password
+   EMAIL_FROM="HRMS Portal" <your_email@gmail.com>
    ```
-4. Run migrations and seed data:
+
+   > 💡 **Note for Gmail Users**: `SMTP_PASS` should be a 16-character **Google App Password** (generated from Google Account -> Security -> 2-Step Verification -> App Passwords). If SMTP keys are omitted, email alerts are logged safely to the backend terminal console.
+
+4. Run migrations and seed database:
    ```bash
    npm run db:migrate
    npm run db:seed
@@ -42,7 +53,7 @@ A premium, full-stack Human Resource Management System (HRMS) built with React (
    ```bash
    npm run dev
    ```
-   The backend will be running on `http://localhost:5000`.
+   The backend will run on `http://localhost:5000`.
 
 ---
 
@@ -59,25 +70,23 @@ A premium, full-stack Human Resource Management System (HRMS) built with React (
    ```bash
    npm run dev
    ```
-   The application will be running on `http://localhost:5173`.
+   The application will run on `http://localhost:5173`.
 
 ---
 
-## 🛠️ Tech Stack & Key Features
+## 🛠️ Key Features & Architecture
 
-- **Backend**: Express.js, Sequelize ORM, MySQL, JWT Authentication, Multer (logo and document uploads).
-- **Frontend**: React (Vite), Vanilla CSS (glassmorphic dark design system), Lucide Icons, React Router DOM.
-- **Dynamic Salary Calculation**:
-  - Wage Type: Fixed Monthly Wage.
-  - Interactive components calculations:
-    - **Basic Salary**: 50% of monthly wage.
-    - **House Rent Allowance (HRA)**: 50% of Basic Salary.
-    - **Standard Allowance**: Fixed ₹4,167/month.
-    - **Performance Bonus**: 8.33% of Basic Salary.
-    - **Leave Travel Allowance (LTA)**: 8.33% of Basic Salary.
-    - **Fixed Allowance**: Automatically computed as residual (`Wage - Sum of other components`).
-  - PF Rates: Employer and Employee Provident Fund calculated dynamically at 12% of Basic Salary.
-  - Tax Deductions: Professional Tax defaults to ₹200.
-- **Role-Based Routing**:
-  - **Employee Portal** (`/home`): Quick dashboard with clock-in/out, leave status, upcoming holidays, and profile page.
-  - **Admin / HR Portal** (`/employees`): Grid directory of employees, click profile to edit all personal/private/salary details, edit leave allocations (`/timeoff/allocation`).
+- **Multi-Tenant Company Scoping**: Dedicated company workspaces. All employees, attendance logs, and leave requests are strictly isolated by `companyId`.
+- **Automated Onboarding & Email Alerts**: Enrolling a new employee automatically dispatches a **Welcome Email** with their Login ID and temporary password via Nodemailer SMTP.
+- **Real-Time Notification System**: Bell Icon dropdown in the header with unread badge counter for leave applications, status approvals, and employee updates.
+- **Systray Check-In / Check-Out**: One-click check-in/out button in the top navigation bar with dynamic work hours calculation.
+- **Leave & Time-Off Management**: Support for Paid, Sick, and Unpaid leave requests with auto-balance checks, attachments, and instant HR approval workflows.
+- **Dynamic Salary Calculation & PDF Payslips**:
+  - Configurable salary components (Basic, HRA, Standard Allowance, Bonus, LTA, Fixed Allowance, PF, PTax).
+  - Printable **1-Page Salary Slip PDF Export**.
+- **Analytics & Reports Dashboard (`/reports`)**:
+  - Company Headcount KPI Cards, Attendance Rate %, Monthly Payroll Mass, Department Distribution.
+  - Printable **Salary Slips Generator**.
+  - **Attendance Summary Report** with **CSV Export**.
+  - **Employee Master Audit Report** with **CSV Export**.
+- **Soft Delete Archiving**: Admins can soft-delete employees (`isActive: false`) inside the profile Edit mode Danger Zone.
