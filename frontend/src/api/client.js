@@ -111,3 +111,19 @@ export const apiUpdateLeaveBalance = (employeeId, body, token) =>
 
 export const apiGetHolidays = (token) =>
   request('GET', '/holidays', null, token);
+
+// Notifications
+export const apiGetNotifications = (token) =>
+  request('GET', '/notifications', null, token);
+
+export const apiGetUnreadNotificationCount = (token) =>
+  request('GET', '/notifications/unread-count', null, token);
+
+export const apiMarkNotificationAsRead = (id, token) =>
+  request('PATCH', `/notifications/${id}/read`, null, token);
+
+export const apiMarkAllNotificationsAsRead = (token) =>
+  request('PATCH', '/notifications/read-all', null, token);
+
+export const apiDeleteNotification = (id, token) =>
+  request('DELETE', `/notifications/${id}`, null, token);

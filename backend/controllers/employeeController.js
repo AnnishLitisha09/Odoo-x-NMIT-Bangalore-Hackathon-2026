@@ -127,6 +127,10 @@ async function createEmployee(req, res) {
 
     await transaction.commit();
 
+    // Trigger Welcome Email & In-App Notification
+    const { sendWelcomeEmail } = require('../utils/emailService');
+    sendWelcomeEmail({ user, employee, tempPassword, companyName }).catch(err => console.error('Welcome email trigger error:', err));
+
     return res.status(201).json({
       message: 'Employee created successfully',
       employee,

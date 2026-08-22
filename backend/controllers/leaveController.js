@@ -71,6 +71,21 @@ async function applyLeave(req, res) {
       status: 'pending',
     });
 
+    // Trigger Notification to HR / Admin Users
+    const { sendLeaveSubmittedAlert } = require('../utils/emailService');
+    const emp = req.user.employee;
+    const empName = emp ? `${emp.firstName} ${emp.lastName}` : 'An employee';
+    
+    // Find HR/Admin users in the same company
+    const hrUsers = await User.findAll({
+      where: { role: ['admin', 'hr'] },
+      include: [{ model: Employee, as: 'employee', where: emp?.companyId ? { companyId: emp.companyId } : {} }]
+    });
+
+    for (const hr of hrUsers) {
+      sendLeaveSubmittedAlert({ hrUser: hr, employeeName: empName, leaveRequest }).catch(err => console.error('Leave notification error:', err));
+    }
+
     return res.status(201).json({
       message: 'Leave request submitted successfully.',
       leaveRequest,
@@ -182,6 +197,13 @@ async function reviewLeaveRequest(req, res) {
     request.reviewerId = req.user.id;
     request.reviewerComment = reviewerComment || null;
     await request.save();
+
+    // Trigger Notification & Email to Employee User
+    const { sendLeaveStatusAlert } = require('../utils/emailService');
+    const targetUser = await User.findOne({ where: { employeeId: request.employeeId } });
+    if (targetUser) {
+      sendLeaveStatusAlert({ user: targetUser, leaveRequest: request, status: request.status }).catch(err => console.error('Leave review alert error:', err));
+    }
 
     return res.status(200).json({
       message: `Leave request successfully ${request.status}.`,

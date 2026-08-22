@@ -11,8 +11,15 @@ const Attendance = require('./Attendance');
 const LeaveRequest = require('./LeaveRequest');
 const LeaveBalance = require('./LeaveBalance');
 const PublicHoliday = require('./PublicHoliday');
+const Notification = require('./Notification');
 
 // Associations
+
+// User <-> Notification
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications', onDelete: 'CASCADE' });
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+// Company <-> Employee
 
 // Company <-> Employee
 Company.hasMany(Employee, { foreignKey: 'companyId', as: 'employees', onDelete: 'CASCADE' });
@@ -68,4 +75,5 @@ module.exports = {
   LeaveRequest,
   LeaveBalance,
   PublicHoliday,
+  Notification,
 };

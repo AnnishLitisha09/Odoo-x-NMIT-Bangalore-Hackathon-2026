@@ -11,6 +11,7 @@ const employeeRoutes   = require('./routes/employeeRoutes');
 const salaryRoutes     = require('./routes/salaryRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const leaveRoutes      = require('./routes/leaveRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const { authenticateJWT, requireRole } = require('./middleware/auth');
 const leaveController     = require('./controllers/leaveController');
@@ -28,11 +29,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ─── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth',        authRoutes);
-app.use('/api/employees',   employeeRoutes);
-app.use('/api/employees',   salaryRoutes);           // nested: /:id/salary
-app.use('/api/attendance',  attendanceRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/employees',     employeeRoutes);
+app.use('/api/employees',     salaryRoutes);           // nested: /:id/salary
+app.use('/api/attendance',    attendanceRoutes);
 app.use('/api/leave-requests', leaveRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Standalone endpoints outside module routers
 app.get('/api/leave-balance/me',  authenticateJWT, leaveController.getMyLeaveBalance);
