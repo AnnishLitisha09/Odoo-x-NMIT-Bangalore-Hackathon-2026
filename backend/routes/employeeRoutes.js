@@ -2,19 +2,26 @@ const express = require('express');
 const router = express.Router();
 const employeeController = require('../controllers/employeeController');
 const { authenticateJWT, requireRole } = require('../middleware/auth');
-const upload = require('../middleware/upload');
 
+// All routes require authentication
 router.use(authenticateJWT);
 
+// Only Admin/HR can create employees
+router.post('/', requireRole(['admin', 'hr']), employeeController.createEmployee);
+
+// Grid listing and detailed fetch
 router.get('/', employeeController.getEmployees);
 router.get('/:id', employeeController.getEmployeeById);
-router.post('/', requireRole(['admin', 'hr']), upload.single('profile_picture'), employeeController.createEmployee);
-router.patch('/:id', requireRole(['admin', 'hr']), employeeController.updateEmployee);
 
-router.post('/:id/skills', employeeController.addSkill);
-router.delete('/:id/skills/:skillId', employeeController.removeSkill);
+// Update route handles its own authorization rules
+router.patch('/:id', employeeController.updateEmployee);
 
-router.post('/:id/certifications', upload.single('document'), employeeController.addCertification);
-router.delete('/:id/certifications/:certId', employeeController.removeCertification);
+// Skill sub-routes
+router.post('/:employeeId/skills', employeeController.addSkill);
+router.delete('/:employeeId/skills/:id', employeeController.removeSkill);
+
+// Certification sub-routes
+router.post('/:employeeId/certifications', employeeController.addCertification);
+router.delete('/:employeeId/certifications/:id', employeeController.removeCertification);
 
 module.exports = router;

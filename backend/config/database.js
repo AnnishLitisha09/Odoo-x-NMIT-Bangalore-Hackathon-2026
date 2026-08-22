@@ -9,7 +9,7 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',
-    logging: false,
+    logging: false, // Set to console.log to see SQL queries
     define: {
       timestamps: true,
       underscored: true,

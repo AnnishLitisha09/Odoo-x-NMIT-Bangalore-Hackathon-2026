@@ -1,23 +1,28 @@
-const { PublicHoliday } = require('../models');
+const db = require('../config/database');
 
-async function insertHolidays() {
-  const holidays = [
-    { name: 'New Year Day', date: '2026-01-01', type: 'gazetted' },
-    { name: 'Republic Day', date: '2026-01-26', type: 'gazetted' },
-    { name: 'Independence Day', date: '2026-08-15', type: 'gazetted' },
-    { name: 'Gandhi Jayanti', date: '2026-10-02', type: 'gazetted' },
-    { name: 'Christmas', date: '2026-12-25', type: 'gazetted' },
-  ];
+const EXTRA = [
+  { name: 'Holi',                  date: '2026-03-17' },
+  { name: 'Good Friday',           date: '2026-04-03' },
+  { name: 'Ram Navami',            date: '2026-04-08' },
+  { name: 'Dr. Ambedkar Jayanti', date: '2026-04-14' },
+  { name: 'Maharashtra Day',       date: '2026-05-01' },
+  { name: 'Dussehra',             date: '2026-10-19' },
+  { name: 'Diwali',               date: '2026-11-07' },
+  { name: 'Diwali (Lakshmi Puja)', date: '2026-11-08' },
+  { name: 'Guru Nanak Jayanti',   date: '2026-11-22' },
+];
 
-  for (const h of holidays) {
-    await PublicHoliday.findOrCreate({ where: { date: h.date }, defaults: h });
+async function run() {
+  await db.authenticate();
+  for (const h of EXTRA) {
+    await db.query(
+      'INSERT IGNORE INTO public_holidays (name, date) VALUES (?, ?)',
+      { replacements: [h.name, h.date] }
+    );
+    console.log('Inserted (or ignored):', h.name);
   }
-
-  console.log('✓ Public holidays initialized.');
+  const [[row]] = await db.query('SELECT COUNT(*) AS cnt FROM public_holidays');
+  console.log('Total public holidays now:', row.cnt);
+  process.exit(0);
 }
-
-if (require.main === module) {
-  insertHolidays().then(() => process.exit(0));
-}
-
-module.exports = insertHolidays;
+run().catch(e => { console.error(e); process.exit(1); });
