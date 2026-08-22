@@ -42,12 +42,12 @@ export default function ReportsView() {
   const [empSearch, setEmpSearch] = useState('');
 
   useEffect(() => {
-    fetchAnalytics();
-    if (isAdmin) {
-      fetchEmployeeList();
-    } else if (user?.employeeId) {
-      setSelectedEmpId(String(user.employeeId));
+    if (user && !['admin', 'hr'].includes(user.role)) {
+      navigate('/home', { replace: true });
+      return;
     }
+    fetchAnalytics();
+    fetchEmployeeList();
   }, [user]);
 
   useEffect(() => {

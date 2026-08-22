@@ -169,7 +169,10 @@ export default function Header({ activeTab }) {
               ? [{ id: 'allocation', label: 'Allocation', path: '/timeoff/allocation', icon: <Building2 size={14} /> }]
               : []
             ),
-            { id: 'reports', label: 'Reports', path: '/reports', icon: <BarChart3 size={14} /> },
+            ...(isAdmin 
+              ? [{ id: 'reports', label: 'Reports', path: '/reports', icon: <BarChart3 size={14} /> }]
+              : []
+            ),
           ].map(t => (
             <button key={t.id} onClick={() => navigate(t.path)}
               style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.9rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 500, fontFamily: 'inherit', background: activeTab === t.id ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === t.id ? 'var(--color-accent-light)' : 'var(--color-text-muted)', transition: 'all 0.15s' }}>

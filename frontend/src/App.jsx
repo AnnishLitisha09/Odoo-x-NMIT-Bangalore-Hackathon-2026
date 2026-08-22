@@ -34,12 +34,12 @@ export default function App() {
           {/* ── Shared routes (role-filtered data inside) ─────────── */}
           <Route path="/attendance"   element={<RequireAuth><Attendance /></RequireAuth>} />
           <Route path="/timeoff"      element={<RequireAuth><TimeOff /></RequireAuth>} />
-          <Route path="/reports"      element={<RequireAuth><ReportsView /></RequireAuth>} />
 
           {/* ── Admin / HR only routes ────────────────────────────── */}
           <Route path="/employees"    element={<RequireAuth><RequireAdminOrHr><EmployeeDirectory /></RequireAdminOrHr></RequireAuth>} />
           <Route path="/employees/:id" element={<RequireAuth><RequireAdminOrHr><EmployeeProfile /></RequireAdminOrHr></RequireAuth>} />
           <Route path="/timeoff/allocation" element={<RequireAuth><RequireAdminOrHr><LeaveAllocation /></RequireAdminOrHr></RequireAuth>} />
+          <Route path="/reports"      element={<RequireAuth><RequireAdminOrHr><ReportsView /></RequireAdminOrHr></RequireAuth>} />
 
           {/* Legacy redirects */}
           <Route path="/time-off" element={<Navigate to="/timeoff" replace />} />
