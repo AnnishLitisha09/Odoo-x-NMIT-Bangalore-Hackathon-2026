@@ -739,11 +739,6 @@ export default function EmployeeProfile() {
         <span style={{ color: 'var(--color-border)' }}>|</span>
         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{emp.firstName} {emp.lastName}{isSelf ? ' (You)' : ''}</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-          {isAdmin && !isSelf && !editing && (
-            <button className="btn-danger" onClick={() => setShowDeleteModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.36rem', fontSize: '0.85rem' }}>
-              <Trash2 size={14} /> Archive Employee
-            </button>
-          )}
           {canEdit && !editing && <button id="edit-profile-btn" className="btn-secondary" onClick={() => setEditing(true)}><Edit2 size={14} /> Edit</button>}
           {editing && <>
             <button className="btn-secondary" onClick={() => { setEditing(false); setEmpForm(emp); }}>Cancel</button>
@@ -804,6 +799,23 @@ export default function EmployeeProfile() {
             {activeTab === 'security' && <SecurityTab token={token} />}
           </div>
         </div>
+
+        {/* Danger Zone (Delete Employee in Edit Mode) */}
+        {isAdmin && !isSelf && editing && (
+          <div className="card animate-fade-in" style={{ marginTop: '1.5rem', padding: '1.25rem 1.75rem', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <p style={{ color: '#f87171', fontWeight: 600, fontSize: '0.9rem', marginBottom: 2 }}>Danger Zone</p>
+              <p style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem', margin: 0 }}>Soft delete / archive this employee record from directory listings.</p>
+            </div>
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={() => setShowDeleteModal(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', flexShrink: 0 }}>
+              <Trash2 size={14} /> Delete this employee
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

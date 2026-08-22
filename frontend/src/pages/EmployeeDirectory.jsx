@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Clock, LogOut, UserCircle, ChevronDown, Users, CalendarDays, Umbrella, Building2, Trash2, AlertCircle } from 'lucide-react';
+import { Search, Plus, Clock, LogOut, UserCircle, ChevronDown, Users, CalendarDays, Umbrella, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiGetEmployees, apiGetAttendance, apiDeleteEmployee } from '../api/client';
+import { apiGetEmployees } from '../api/client';
 import CreateEmployeeModal from '../components/CreateEmployeeModal';
 import Header from '../components/Header';
 
@@ -19,28 +19,16 @@ function Avatar({ src, name, size = 56 }) {
     : <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg,#7c3aed,#a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: size * 0.35 }}>{initials}</div>;
 }
 
-function EmployeeCard({ emp, onClick, onDelete, isAdmin }) {
+function EmployeeCard({ emp, onClick }) {
   const statusInfo = STATUS[emp.status] || STATUS.absent;
   return (
     <div id={`emp-card-${emp.id}`} className="card animate-fade-in" onClick={() => onClick(emp)} style={{ padding: '1.5rem', cursor: 'pointer', position: 'relative', transition: 'all 0.2s ease' }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = 'rgba(124,58,237,0.5)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.4)'; }}
       onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.boxShadow = 'none'; }}>
       
-      <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
-          {statusInfo.dot}
-          <span>{statusInfo.label}</span>
-        </div>
-        {isAdmin && (
-          <button
-            title="Archive / Delete Employee"
-            onClick={(e) => { e.stopPropagation(); onDelete(emp); }}
-            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 4, opacity: 0.7, borderRadius: 4, transition: 'opacity 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}>
-            <Trash2 size={15} />
-          </button>
-        )}
+      <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
+        {statusInfo.dot}
+        <span>{statusInfo.label}</span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
@@ -69,8 +57,6 @@ export default function EmployeeDirectory() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchEmployees();
@@ -89,20 +75,6 @@ export default function EmployeeDirectory() {
   function handleSearch(e) {
     setSearch(e.target.value);
     fetchEmployees(e.target.value);
-  }
-
-  async function confirmSoftDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await apiDeleteEmployee(deleteTarget.id, token);
-      setDeleteTarget(null);
-      fetchEmployees(search);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setDeleting(false);
-    }
   }
 
   return (
@@ -143,9 +115,7 @@ export default function EmployeeDirectory() {
               <EmployeeCard
                 key={emp.id}
                 emp={emp}
-                isAdmin={isAdmin}
                 onClick={() => navigate(`/employees/${emp.id}`)}
-                onDelete={(e) => setDeleteTarget(e)}
               />
             ))}
           </div>
@@ -158,27 +128,6 @@ export default function EmployeeDirectory() {
           onClose={() => setShowCreate(false)}
           onCreated={() => { setShowCreate(false); fetchEmployees(search); }}
         />
-      )}
-
-      {/* Delete / Soft Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setDeleteTarget(null)}>
-          <div className="modal-box" style={{ maxWidth: 440, textAlign: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(239,68,68,0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-              <AlertCircle size={24} />
-            </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '0.5rem' }}>Archive Employee</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-              Are you sure you want to soft-delete / archive <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong>? Their profile will be hidden from active directory lists.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-              <button className="btn-secondary" onClick={() => setDeleteTarget(null)}>Cancel</button>
-              <button className="btn-danger" onClick={confirmSoftDelete} disabled={deleting}>
-                {deleting ? 'Archiving…' : 'Yes, Archive Employee'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
