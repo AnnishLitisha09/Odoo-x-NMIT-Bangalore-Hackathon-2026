@@ -48,8 +48,14 @@ async function login(req, res) {
       { expiresIn: '24h' }
     );
 
-    // Get company details (single-tenant default)
-    const company = await Company.findOne() || { name: 'Odoo India', logoUrl: null };
+    // Get company details for the logged in user
+    let company = user.employee?.company;
+    if (!company && user.employee?.companyId) {
+      company = await Company.findByPk(user.employee.companyId);
+    }
+    if (!company) {
+      company = await Company.findOne() || { name: 'Odoo India', logoUrl: null };
+    }
 
     return res.status(200).json({
       message: 'Login successful',
@@ -67,6 +73,7 @@ async function login(req, res) {
         employee: user.employee
       },
       company: {
+        id: company.id,
         name: company.name,
         logoUrl: company.logoUrl
       }
@@ -137,24 +144,15 @@ async function register(req, res) {
       logoUrl = `/uploads/${req.file.filename}`;
     }
 
-    // Create or update company settings
-    let company = await Company.findOne();
-    if (company) {
-      company.name = companyName;
-      if (logoUrl) {
-        company.logoUrl = logoUrl;
-      }
-      await company.save({ transaction });
-    } else {
-      company = await Company.create({
-        name: companyName,
-        logoUrl,
-        defaultWorkingDaysPerWeek: 5,
-        defaultWorkingHoursPerDay: 8,
-        defaultPfPct: 12.00,
-        defaultProfessionalTax: 200.00
-      }, { transaction });
-    }
+    // Create new Company record for each registration
+    const company = await Company.create({
+      name: companyName,
+      logoUrl,
+      defaultWorkingDaysPerWeek: 5,
+      defaultWorkingHoursPerDay: 8,
+      defaultPfPct: 12.00,
+      defaultProfessionalTax: 200.00
+    }, { transaction });
 
     // Split name into first and last
     const nameParts = name.trim().split(/\s+/);
@@ -169,7 +167,7 @@ async function register(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create Employee record
+    // Create Employee record with companyId
     const employee = await Employee.create({
       firstName,
       lastName,
@@ -179,7 +177,8 @@ async function register(req, res) {
       department: 'HR & IT',
       location: 'Headquarters',
       dateOfJoining: todayStr,
-      empCode: loginId
+      empCode: loginId,
+      companyId: company.id
     }, { transaction });
 
     // Create User record
@@ -234,11 +233,17 @@ async function register(req, res) {
 
 async function getCompany(req, res) {
   try {
-    const company = await Company.findOne();
+    let company = req.user?.employee?.company;
+    if (!company && req.user?.employee?.companyId) {
+      company = await Company.findByPk(req.user.employee.companyId);
+    }
+    if (!company) {
+      company = await Company.findOne();
+    }
     if (!company) {
       return res.status(200).json({ name: 'Odoo India', logoUrl: null });
     }
-    return res.status(200).json({ name: company.name, logoUrl: company.logoUrl });
+    return res.status(200).json({ id: company.id, name: company.name, logoUrl: company.logoUrl });
   } catch (error) {
     console.error('Error fetching company info:', error);
     return res.status(500).json({ message: 'Error fetching company configuration.' });

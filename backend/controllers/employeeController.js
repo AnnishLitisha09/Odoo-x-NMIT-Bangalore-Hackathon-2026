@@ -159,7 +159,11 @@ async function getEmployees(req, res) {
     }
 
     // Filter by logged in HR/Admin's companyId
-    const userCompanyId = req.user.employee?.companyId;
+    let userCompanyId = req.user.employee?.companyId;
+    if (!userCompanyId && req.user.employeeId) {
+      const selfEmp = await Employee.findByPk(req.user.employeeId);
+      userCompanyId = selfEmp?.companyId;
+    }
     if (userCompanyId) {
       whereClause.companyId = userCompanyId;
     }
