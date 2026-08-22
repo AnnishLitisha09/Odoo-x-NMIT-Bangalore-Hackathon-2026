@@ -14,6 +14,10 @@ const PublicHoliday = require('./PublicHoliday');
 
 // Associations
 
+// Company <-> Employee
+Company.hasMany(Employee, { foreignKey: 'companyId', as: 'employees', onDelete: 'CASCADE' });
+Employee.belongsTo(Company, { foreignKey: 'companyId', as: 'company' });
+
 // Employee <-> User
 Employee.hasOne(User, { foreignKey: 'employeeId', as: 'user', onDelete: 'CASCADE' });
 User.belongsTo(Employee, { foreignKey: 'employeeId', as: 'employee' });

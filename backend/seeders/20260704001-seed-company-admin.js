@@ -42,6 +42,7 @@ module.exports = {
         location: 'Mumbai, India',
         date_of_joining: '2026-07-04',
         emp_code: 'ADMIN001',
+        company_id: 1,
         created_at: new Date(),
         updated_at: new Date(),
       }]);

@@ -56,6 +56,9 @@ async function createEmployee(req, res) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(tempPassword, salt);
 
+    // Determine companyId from logged in HR/Admin or default 1
+    const userCompanyId = req.user.employee?.companyId || 1;
+
     // Create Employee record
     const employee = await Employee.create({
       firstName,
@@ -79,6 +82,7 @@ async function createEmployee(req, res) {
       panNo,
       uanNo,
       empCode: empCode || loginId, // Default to loginId if not specified
+      companyId: userCompanyId,
     }, { transaction });
 
     // Create User record
@@ -154,6 +158,12 @@ async function getEmployees(req, res) {
       };
     }
 
+    // Filter by logged in HR/Admin's companyId
+    const userCompanyId = req.user.employee?.companyId;
+    if (userCompanyId) {
+      whereClause.companyId = userCompanyId;
+    }
+
     // Exclude the current user's own employee record from the list
     const selfEmployeeId = req.user.employeeId;
     if (selfEmployeeId) {
@@ -227,7 +237,8 @@ async function getEmployeeById(req, res) {
         { model: User, as: 'user', attributes: ['id', 'loginId', 'role'] },
         { model: Skill, as: 'skills' },
         { model: Certification, as: 'certifications' },
-        { model: LeaveBalance, as: 'leaveBalances' }
+        { model: LeaveBalance, as: 'leaveBalances' },
+        { model: Company, as: 'company' }
       ]
     });
 

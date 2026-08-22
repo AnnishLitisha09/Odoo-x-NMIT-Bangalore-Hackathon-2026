@@ -127,9 +127,13 @@ async function getAttendanceLogs(req, res) {
     });
 
     if (isAdminOrHr && !employeeId) {
-      // Return a complete list of all employees with their attendance for this date (default to 'absent' if not present)
+      const userCompanyId = req.user.employee?.companyId;
+      const empWhere = userCompanyId ? { companyId: userCompanyId } : {};
+
+      // Return a complete list of all employees in HR's company with their attendance for this date (default to 'absent' if not present)
       const allEmployees = await Employee.findAll({
-        attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'profilePicUrl']
+        where: empWhere,
+        attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'profilePicUrl', 'companyId']
       });
 
       const logMap = new Map(logs.map(l => [l.employeeId, l]));

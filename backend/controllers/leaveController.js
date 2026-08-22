@@ -103,10 +103,18 @@ async function getLeaveRequests(req, res) {
       whereClause.type = type;
     }
 
+    const userCompanyId = req.user.employee?.companyId;
+    const empIncludeWhere = (isAdminOrHr && userCompanyId) ? { companyId: userCompanyId } : {};
+
     const requests = await LeaveRequest.findAll({
       where: whereClause,
       include: [
-        { model: Employee, as: 'employee', attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'profilePicUrl'] }
+        {
+          model: Employee,
+          as: 'employee',
+          where: empIncludeWhere,
+          attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'profilePicUrl', 'companyId']
+        }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -230,12 +238,16 @@ async function getAllLeaveBalances(req, res) {
   try {
     const { year } = req.query;
     const targetYear = parseInt(year) || new Date().getFullYear();
+    const userCompanyId = req.user.employee?.companyId;
+    const empWhere = userCompanyId ? { companyId: userCompanyId } : {};
+
     const balances = await LeaveBalance.findAll({
       where: { year: targetYear },
       include: [{
         model: Employee,
         as: 'employee',
-        attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'department', 'profilePicUrl']
+        where: empWhere,
+        attributes: ['id', 'firstName', 'lastName', 'jobPosition', 'department', 'profilePicUrl', 'companyId']
       }],
       order: [[{ model: Employee, as: 'employee' }, 'firstName', 'ASC']]
     });

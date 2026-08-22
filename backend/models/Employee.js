@@ -114,6 +114,11 @@ const Employee = sequelize.define('Employee', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  companyId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: 1,
+  },
 }, {
   tableName: 'employees',
 });

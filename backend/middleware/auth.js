@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { User, Employee } = require('../models');
+const { User, Employee, Company } = require('../models');
 
 async function authenticateJWT(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -13,7 +13,11 @@ async function authenticateJWT(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'hrms_jwt_secret_key_2026');
     const user = await User.findByPk(decoded.id, {
-      include: { model: Employee, as: 'employee' }
+      include: {
+        model: Employee,
+        as: 'employee',
+        include: { model: Company, as: 'company' }
+      }
     });
 
     if (!user) {
