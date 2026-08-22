@@ -140,3 +140,6 @@ export const apiGetSalarySlip = (employeeId, month, year, token) =>
 
 export const apiGetAttendanceReport = (month, year, token) =>
   request('GET', `/reports/attendance?month=${month}&year=${year}`, null, token);
+
+export const apiGetEmployeeReport = (token) =>
+  request('GET', '/reports/employees', null, token);

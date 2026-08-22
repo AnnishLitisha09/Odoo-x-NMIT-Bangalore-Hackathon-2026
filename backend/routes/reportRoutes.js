@@ -8,5 +8,6 @@ router.use(authenticateJWT);
 router.get('/analytics', reportController.getAnalyticsSummary);
 router.get('/salary-slip/:employeeId', reportController.generateSalarySlip);
 router.get('/attendance', reportController.getAttendanceReport);
+router.get('/employees', reportController.getEmployeeReport);
 
 module.exports = router;

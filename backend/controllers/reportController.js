@@ -259,8 +259,49 @@ async function getAttendanceReport(req, res) {
   }
 }
 
+/**
+ * Get Employee Master Audit Report
+ */
+async function getEmployeeReport(req, res) {
+  try {
+    let userCompanyId = req.user.employee?.companyId;
+    if (!userCompanyId && req.user.employeeId) {
+      const selfEmp = await Employee.findByPk(req.user.employeeId);
+      userCompanyId = selfEmp?.companyId;
+    }
+
+    const companyWhere = userCompanyId ? { companyId: userCompanyId } : {};
+
+    const employees = await Employee.findAll({
+      where: { ...companyWhere, isActive: true },
+      include: [{ model: User, as: 'user', attributes: ['loginId', 'role'] }],
+      order: [['id', 'ASC']],
+    });
+
+    const report = employees.map(emp => ({
+      id: emp.id,
+      name: `${emp.firstName} ${emp.lastName}`,
+      loginId: emp.user?.loginId || '—',
+      role: emp.user?.role || 'employee',
+      jobPosition: emp.jobPosition,
+      department: emp.department || 'General',
+      companyEmail: emp.companyEmail,
+      mobile: emp.mobile || '—',
+      location: emp.location || '—',
+      dateOfJoining: emp.dateOfJoining || '—',
+      status: emp.status || 'absent',
+    }));
+
+    return res.status(200).json({ report });
+  } catch (error) {
+    console.error('Error fetching employee report:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+}
+
 module.exports = {
   getAnalyticsSummary,
   generateSalarySlip,
   getAttendanceReport,
+  getEmployeeReport,
 };

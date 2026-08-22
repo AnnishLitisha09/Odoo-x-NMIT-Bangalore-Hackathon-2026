@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart3, FileText, CalendarDays, Users, TrendingUp, DollarSign,
-  CheckCircle, AlertTriangle, Download, Filter, Search, Building2
+  CheckCircle, AlertTriangle, Download, Filter, Search, Building2, UserCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  apiGetAnalyticsSummary, apiGetSalarySlip, apiGetAttendanceReport, apiGetEmployees
+  apiGetAnalyticsSummary, apiGetSalarySlip, apiGetAttendanceReport, apiGetEmployeeReport, apiGetEmployees
 } from '../api/client';
 import Header from '../components/Header';
 import SalarySlipModal from '../components/SalarySlipModal';
@@ -36,6 +36,11 @@ export default function ReportsView() {
   const [loadingAttReport, setLoadingAttReport] = useState(false);
   const [attSearch, setAttSearch] = useState('');
 
+  // Employee Audit Report State
+  const [empReportData, setEmpReportData] = useState([]);
+  const [loadingEmpReport, setLoadingEmpReport] = useState(false);
+  const [empSearch, setEmpSearch] = useState('');
+
   useEffect(() => {
     fetchAnalytics();
     if (isAdmin) {
@@ -48,6 +53,8 @@ export default function ReportsView() {
   useEffect(() => {
     if (activeTab === 'attendance') {
       fetchAttendanceReport();
+    } else if (activeTab === 'employee') {
+      fetchEmployeeReport();
     }
   }, [activeTab, attReportMonth, attReportYear]);
 
@@ -95,7 +102,16 @@ export default function ReportsView() {
     finally { setLoadingAttReport(false); }
   }
 
-  function exportCSV() {
+  async function fetchEmployeeReport() {
+    setLoadingEmpReport(true);
+    try {
+      const res = await apiGetEmployeeReport(token);
+      setEmpReportData(res.report || []);
+    } catch { /* silent */ }
+    finally { setLoadingEmpReport(false); }
+  }
+
+  function exportAttendanceCSV() {
     if (attReportData.length === 0) return;
 
     const headers = ['Employee ID', 'Name', 'Department', 'Job Position', 'Days Present', 'Days On Leave', 'Total Work Hours'];
@@ -115,6 +131,34 @@ export default function ReportsView() {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', `Attendance_Report_${attReportYear}_${attReportMonth}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function exportEmployeeCSV() {
+    if (empReportData.length === 0) return;
+
+    const headers = ['Employee ID', 'Name', 'Login ID', 'Role', 'Department', 'Job Position', 'Email', 'Mobile', 'Location', 'Date of Joining'];
+    const rows = empReportData.map(r => [
+      r.id,
+      `"${r.name}"`,
+      `"${r.loginId}"`,
+      `"${r.role}"`,
+      `"${r.department}"`,
+      `"${r.jobPosition}"`,
+      `"${r.companyEmail}"`,
+      `"${r.mobile}"`,
+      `"${r.location}"`,
+      `"${r.dateOfJoining}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Employee_Master_Report_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -141,6 +185,14 @@ export default function ReportsView() {
     r.jobPosition.toLowerCase().includes(attSearch.toLowerCase())
   );
 
+  const filteredEmpReport = empReportData.filter(r =>
+    r.name.toLowerCase().includes(empSearch.toLowerCase()) ||
+    r.department.toLowerCase().includes(empSearch.toLowerCase()) ||
+    r.jobPosition.toLowerCase().includes(empSearch.toLowerCase()) ||
+    r.companyEmail.toLowerCase().includes(empSearch.toLowerCase()) ||
+    r.loginId.toLowerCase().includes(empSearch.toLowerCase())
+  );
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
       <Header activeTab="reports" />
@@ -151,11 +203,11 @@ export default function ReportsView() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>Analytics & Reports</h1>
-            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0.2rem 0 0 0' }}>Comprehensive Insights, Salary Slips & Attendance Audits</p>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', margin: '0.2rem 0 0 0' }}>Comprehensive Insights, Salary Slips, Employee & Attendance Audits</p>
           </div>
         </div>
 
-        {/* Tab Navigation Bar */}
+        {/* Tab Navigation Bar (Single Line) */}
         <div className="card" style={{ padding: '0.4rem', marginBottom: '1.5rem', display: 'inline-flex', gap: '0.4rem', flexWrap: 'nowrap', overflowX: 'auto', maxWidth: '100%', scrollbarWidth: 'none' }}>
           <button
             className={`btn-secondary ${activeTab === 'analytics' ? 'active-tab' : ''}`}
@@ -175,6 +227,12 @@ export default function ReportsView() {
             style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'attendance' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'attendance' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
             <CalendarDays size={16} /> Attendance Report
           </button>
+          <button
+            className={`btn-secondary ${activeTab === 'employee' ? 'active-tab' : ''}`}
+            onClick={() => setActiveTab('employee')}
+            style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', fontSize: '0.85rem', borderRadius: 8, border: 'none', background: activeTab === 'employee' ? 'rgba(124,58,237,0.2)' : 'transparent', color: activeTab === 'employee' ? 'var(--color-accent-light)' : 'var(--color-text-muted)', cursor: 'pointer', fontWeight: 600 }}>
+            <UserCheck size={16} /> Employee Audit Report
+          </button>
         </div>
 
         {/* ── Tab 1: Analytics Overview ── */}
@@ -184,9 +242,7 @@ export default function ReportsView() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
-              {/* Summary Metric Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-                
                 <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(124,58,237,0.15)', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Users size={22} />
@@ -226,16 +282,11 @@ export default function ReportsView() {
                     <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--color-text)', margin: '0.1rem 0 0 0' }}>₹{(analytics?.monthlyPayrollMass || 0).toLocaleString('en-IN')}</h3>
                   </div>
                 </div>
-
               </div>
 
-              {/* Attendance Breakdown & Department Distribution */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-                
-                {/* Attendance Today */}
                 <div className="card" style={{ padding: '1.5rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '1.25rem' }}>Today's Presence Breakdown</h3>
-                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
@@ -259,10 +310,8 @@ export default function ReportsView() {
                   </div>
                 </div>
 
-                {/* Department Distribution */}
                 <div className="card" style={{ padding: '1.5rem' }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', marginBottom: '1.25rem' }}>Department Distribution</h3>
-                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                     {analytics?.departmentDistribution?.map((d, i) => (
                       <div key={i}>
@@ -277,7 +326,6 @@ export default function ReportsView() {
                     ))}
                   </div>
                 </div>
-
               </div>
 
             </div>
@@ -291,8 +339,6 @@ export default function ReportsView() {
             <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>Select the month, year, and employee to generate a printable payslip.</p>
 
             <form onSubmit={handleGenerateSlip} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              
-              {/* Employee Selector (Admin only) */}
               {isAdmin ? (
                 <div>
                   <label className="field-label">Select Employee</label>
@@ -315,7 +361,6 @@ export default function ReportsView() {
                 </div>
               )}
 
-              {/* Month and Year Selectors */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label className="field-label">Month</label>
@@ -351,29 +396,19 @@ export default function ReportsView() {
         {/* ── Tab 3: Attendance Report ── */}
         {activeTab === 'attendance' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            
-            {/* Report Filters Toolbar */}
             <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Filter size={16} color="var(--color-text-muted)" />
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' }}>Filters:</span>
               </div>
 
-              <select
-                className="input-field"
-                value={attReportMonth}
-                onChange={e => setAttReportMonth(parseInt(e.target.value))}
-                style={{ width: 140 }}>
+              <select className="input-field" value={attReportMonth} onChange={e => setAttReportMonth(parseInt(e.target.value))} style={{ width: 140 }}>
                 {months.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
               </select>
 
-              <select
-                className="input-field"
-                value={attReportYear}
-                onChange={e => setAttReportYear(parseInt(e.target.value))}
-                style={{ width: 100 }}>
+              <select className="input-field" value={attReportYear} onChange={e => setAttReportYear(parseInt(e.target.value))} style={{ width: 100 }}>
                 <option value={2026}>2026</option>
                 <option value={2025}>2025</option>
               </select>
@@ -389,12 +424,11 @@ export default function ReportsView() {
                 />
               </div>
 
-              <button className="btn-secondary" onClick={exportCSV} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.9rem', fontSize: '0.82rem' }}>
+              <button className="btn-secondary" onClick={exportAttendanceCSV} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.9rem', fontSize: '0.82rem' }}>
                 <Download size={14} /> Export CSV
               </button>
             </div>
 
-            {/* Attendance Report Table */}
             <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
               {loadingAttReport ? (
                 <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading attendance report…</div>
@@ -418,22 +452,82 @@ export default function ReportsView() {
                         <td style={{ padding: '0.85rem 1.25rem', fontWeight: 600, color: 'var(--color-text)' }}>{r.name}</td>
                         <td style={{ padding: '0.85rem 1.25rem', color: 'var(--color-text-muted)' }}>{r.department}</td>
                         <td style={{ padding: '0.85rem 1.25rem', color: 'var(--color-text-muted)' }}>{r.jobPosition}</td>
-                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center' }}>
-                          <span className="badge badge-green">{r.daysPresent} days</span>
-                        </td>
-                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center' }}>
-                          <span className="badge badge-yellow">{r.daysOnLeave} days</span>
-                        </td>
-                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text)' }}>
-                          {r.totalHours} hrs
-                        </td>
+                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center' }}><span className="badge badge-green">{r.daysPresent} days</span></td>
+                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'center' }}><span className="badge badge-yellow">{r.daysOnLeave} days</span></td>
+                        <td style={{ padding: '0.85rem 1.25rem', textAlign: 'right', fontWeight: 700, color: 'var(--color-text)' }}>{r.totalHours} hrs</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               )}
             </div>
+          </div>
+        )}
 
+        {/* ── Tab 4: Employee Audit Report ── */}
+        {activeTab === 'employee' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="card" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', flex: 1, minWidth: 240 }}>
+                <Search size={15} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <input
+                  className="input-field"
+                  placeholder="Search employee, email, department, login ID..."
+                  value={empSearch}
+                  onChange={e => setEmpSearch(e.target.value)}
+                  style={{ paddingLeft: '2.2rem' }}
+                />
+              </div>
+
+              <button className="btn-secondary" onClick={exportEmployeeCSV} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 0.9rem', fontSize: '0.82rem' }}>
+                <Download size={14} /> Export Employee CSV
+              </button>
+            </div>
+
+            <div className="card" style={{ overflowX: 'auto', padding: 0 }}>
+              {loadingEmpReport ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading employee master report…</div>
+              ) : filteredEmpReport.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>No employee records found.</div>
+              ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--color-surface-2)', borderBottom: '1px solid var(--color-border)', textAlign: 'left', color: 'var(--color-text-muted)', fontSize: '0.78rem' }}>
+                      <th style={{ padding: '0.85rem 1rem' }}>ID & Name</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Login ID & Role</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Department & Designation</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Email & Mobile</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Location</th>
+                      <th style={{ padding: '0.85rem 1rem' }}>Date Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEmpReport.map(r => (
+                      <tr key={r.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <div style={{ fontWeight: 600, color: 'var(--color-text)' }}>{r.name}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--color-text-dim)' }}>Emp #{r.id}</div>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#a78bfa' }}>{r.loginId}</div>
+                          <span className="badge badge-purple" style={{ fontSize: '0.68rem', marginTop: 2 }}>{r.role}</span>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <div style={{ color: 'var(--color-text)' }}>{r.jobPosition}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{r.department}</div>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <div style={{ color: 'var(--color-text)' }}>{r.companyEmail}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{r.mobile}</div>
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem', color: 'var(--color-text-muted)' }}>{r.location}</td>
+                        <td style={{ padding: '0.85rem 1rem', color: 'var(--color-text-muted)' }}>{r.dateOfJoining}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         )}
 
