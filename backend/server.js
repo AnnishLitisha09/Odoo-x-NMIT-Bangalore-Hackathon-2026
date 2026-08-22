@@ -23,6 +23,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'HRMS Backend Service is active.' });
 });
 
+// Routes
+app.use('/api/employees', require('./routes/employeeRoutes'));
+app.use('/api/attendance', require('./routes/attendanceRoutes'));
+app.use('/api/leaves', require('./routes/leaveRoutes'));
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
