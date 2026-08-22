@@ -1,19 +1,20 @@
 const nodemailer = require('nodemailer');
 const { Notification, User, Employee } = require('../models');
 
-// Configure Nodemailer transporter (SMTP fallback to console logger in dev)
-let transporter = null;
+function getTransporter() {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s+/g, '') : '';
 
-if (process.env.SMTP_HOST && process.env.SMTP_USER) {
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  if (host && user && pass) {
+    return nodemailer.createTransport({
+      host,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: { user, pass },
+    });
+  }
+  return null;
 }
 
 /**
@@ -45,6 +46,7 @@ async function sendNotificationAndEmail({ userId, recipientEmail, title, message
       </div>
     `;
 
+    const transporter = getTransporter();
     if (transporter && recipientEmail) {
       await transporter.sendMail({
         from: fromAddress,
@@ -52,7 +54,7 @@ async function sendNotificationAndEmail({ userId, recipientEmail, title, message
         subject: title,
         html: bodyContent,
       });
-      console.log(`✉️ Email sent to ${recipientEmail}: ${title}`);
+      console.log(`✉️ Real email sent successfully to ${recipientEmail}: ${title}`);
     } else {
       console.log(`[Email Alert Log] To: ${recipientEmail || 'User ID ' + userId} | Subject: ${title}`);
     }
